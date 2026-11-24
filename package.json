@@ -6,8 +6,10 @@
   "packageManager": "pnpm@10.32.1",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/build-local-deps.mjs",
     "dev": "node scripts/tauri-cli.mjs dev",
     "dev:web": "vite",
+    "prebuild": "node scripts/build-local-deps.mjs",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "node scripts/tauri-cli.mjs",
@@ -81,6 +83,9 @@
   "pnpm": {
     "overrides": {
       "picomatch@>=4.0.0 <4.0.4": ">=4.0.4"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

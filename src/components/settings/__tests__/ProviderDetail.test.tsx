@@ -12,6 +12,14 @@ import type {
 } from '@/types';
 import { ProviderDetail } from '../ProviderDetail';
 
+const edition = vi.hoisted(() => ({ externalLinks: true }));
+
+vi.mock('@/lib/edition', () => ({
+  EDITION: 'public',
+  FEATURES: {},
+  isFeatureEnabled: (key: string) => (key === 'externalLinks' ? edition.externalLinks : true),
+}));
+
 const mocks = vi.hoisted(() => ({
   toggleProvider: vi.fn(),
   updateProvider: vi.fn(),
@@ -202,6 +210,7 @@ vi.mock('@/stores', () => ({
 describe('ProviderDetail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    edition.externalLinks = true;
     window.localStorage.clear();
     provider = createProviderFixture();
     mocks.updateProvider.mockResolvedValue(undefined);
@@ -339,6 +348,19 @@ describe('ProviderDetail', () => {
     );
 
     expect(screen.getByRole('button', { name: 'settings.website' })).toBeInTheDocument();
+  });
+
+  it('hides the official website link when external links are disabled', () => {
+    edition.externalLinks = false;
+    provider.builtin_id = 'openai';
+
+    render(
+      <App>
+        <ProviderDetail providerId="provider-1" />
+      </App>,
+    );
+
+    expect(screen.queryByRole('button', { name: 'settings.website' })).not.toBeInTheDocument();
   });
 
   it('hides official website link for custom providers', () => {

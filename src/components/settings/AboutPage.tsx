@@ -1,10 +1,12 @@
 import { Button, Divider, Typography, InputNumber, Switch } from 'antd';
-import { Github, Globe, RefreshCw, Terminal } from 'lucide-react';
+import { RefreshCw, Terminal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useCallback } from 'react';
 import { isTauri } from '@/lib/invoke';
 import logoUrl from '@/assets/image/logo.png';
-import { useSettingsStore } from '@/stores';
+import { APP_NAME, APP_TAGLINE } from '@/lib/brand';
+import { useSettingsStore, useSkillStore } from '@/stores';
+import { isFeatureEnabled } from '@/lib/edition';
 import { useUpdateChecker } from '@/hooks/useUpdateChecker';
 import {
   loadDevtoolsContextMenuEnabled,
@@ -23,6 +25,12 @@ export function AboutPage() {
   const autoCheckUpdate = useSettingsStore((s) => s.settings.auto_check_update ?? true);
   const updateCheckInterval = useSettingsStore((s) => s.settings.update_check_interval ?? 60);
   const saveSettings = useSettingsStore((s) => s.saveSettings);
+  const registryInfo = useSkillStore((s) => s.registryInfo);
+  const loadRegistryStatus = useSkillStore((s) => s.loadRegistryStatus);
+
+  useEffect(() => {
+    void loadRegistryStatus();
+  }, [loadRegistryStatus]);
 
   useEffect(() => {
     if (isTauri()) {
@@ -61,12 +69,15 @@ export function AboutPage() {
       }}>
         <img
           src={logoUrl}
-          alt="AQBot"
+          alt={APP_NAME}
           style={{ width: 96, height: 96, borderRadius: 20, marginBottom: 16 }}
           draggable={false}
         />
-        <div style={{ fontSize: 22, fontWeight: 600 }}>AQBot</div>
+        <div style={{ fontSize: 22, fontWeight: 600 }}>{APP_NAME}</div>
         <Text type="secondary" style={{ marginTop: 4 }}>
+          {APP_TAGLINE}
+        </Text>
+        <Text type="secondary" style={{ marginTop: 2 }}>
           {t('settings.version')} {appVersion}
         </Text>
       </div>
@@ -82,62 +93,62 @@ export function AboutPage() {
           <Text type="secondary">AGPL-3.0</Text>
         </div>
       </SettingsGroup>
-      <SettingsGroup title={t('settings.groupLinks')}>
+      <SettingsGroup title={t('skills.registryLabel')}>
         <div style={rowStyle} className="flex items-center justify-between">
-          <span>{t('settings.website')}</span>
-          <Button
-            icon={<Globe size={16} />}
-            href="https://app.aqbot.top"
-            target="_blank"
-            type="link"
+          <span>{t('skills.registryLabel')}</span>
+          <Text
+            type="secondary"
+            copyable={{ text: registryInfo?.baseUrl || '' }}
+            style={{ maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
           >
-            {t('settings.website')}
-          </Button>
+            {registryInfo?.baseUrl || t('skills.registryUnknown')}
+          </Text>
         </div>
         <Divider style={{ margin: '4px 0' }} />
         <div style={rowStyle} className="flex items-center justify-between">
-          <span>GitHub</span>
-          <Button
-            icon={<Github size={16} />}
-            href="https://github.com/AQBot-Desktop/AQBot"
-            target="_blank"
-            type="link"
-          >
-            {t('settings.github')}
-          </Button>
+          <span>{t('skills.marketplace')}</span>
+          <Text type="secondary">
+            {registryInfo?.reachable
+              ? t('skills.registryOnline', { count: registryInfo.skillCount })
+              : t('skills.registryOffline')}
+          </Text>
         </div>
         <Divider style={{ margin: '4px 0' }} />
-        <div style={rowStyle} className="flex items-center justify-between">
-          <span>{t('settings.checkUpdate')}</span>
-          <Button
-            icon={<RefreshCw size={16} className={checking ? 'animate-spin' : ''} />}
-            onClick={handleCheckUpdate}
-            loading={checking}
-          >
-            {t('settings.checkUpdate')}
-          </Button>
-        </div>
-        <Divider style={{ margin: '4px 0' }} />
-        <div style={rowStyle} className="flex items-center justify-between">
-          <span>{t('settings.autoCheckUpdate')}</span>
-          <Switch
-            checked={autoCheckUpdate}
-            onChange={(checked) => saveSettings({ auto_check_update: checked })}
-          />
-        </div>
-        <Divider style={{ margin: '4px 0' }} />
-        <div style={rowStyle} className="flex items-center justify-between">
-          <span>{t('settings.updateCheckInterval')}</span>
-          <InputNumber
-            min={1}
-            max={1440}
-            value={updateCheckInterval}
-            disabled={!autoCheckUpdate}
-            onChange={(val) => val != null && saveSettings({ update_check_interval: val })}
-            style={{ width: 100 }}
-            addonAfter={t('settings.minutes')}
-          />
-        </div>
+        {isFeatureEnabled('updateCheck') && (
+          <>
+            <div style={rowStyle} className="flex items-center justify-between">
+              <span>{t('settings.checkUpdate')}</span>
+              <Button
+                icon={<RefreshCw size={16} className={checking ? 'animate-spin' : ''} />}
+                onClick={handleCheckUpdate}
+                loading={checking}
+              >
+                {t('settings.checkUpdate')}
+              </Button>
+            </div>
+            <Divider style={{ margin: '4px 0' }} />
+            <div style={rowStyle} className="flex items-center justify-between">
+              <span>{t('settings.autoCheckUpdate')}</span>
+              <Switch
+                checked={autoCheckUpdate}
+                onChange={(checked) => saveSettings({ auto_check_update: checked })}
+              />
+            </div>
+            <Divider style={{ margin: '4px 0' }} />
+            <div style={rowStyle} className="flex items-center justify-between">
+              <span>{t('settings.updateCheckInterval')}</span>
+              <InputNumber
+                min={1}
+                max={1440}
+                value={updateCheckInterval}
+                disabled={!autoCheckUpdate}
+                onChange={(val) => val != null && saveSettings({ update_check_interval: val })}
+                style={{ width: 100 }}
+                addonAfter={t('settings.minutes')}
+              />
+            </div>
+          </>
+        )}
         {isTauri() && devtoolsEnabled && (
           <>
             <Divider style={{ margin: '4px 0' }} />

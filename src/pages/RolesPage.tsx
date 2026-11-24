@@ -40,6 +40,7 @@ import { McpServerIcon } from '@/components/shared/McpServerIcon';
 import { NamespaceIcon } from '@/components/shared/NamespaceIcon';
 import { RoleModelBindingsEditor } from '@/components/roles/RoleModelBindingsEditor';
 import { resolveRoleDefaultModel, validateRoleModelBindings } from '@/lib/roleModels';
+import { isFeatureEnabled } from '@/lib/edition';
 import { OpeningQuestionsEditor } from '@/components/roles/OpeningQuestionsEditor';
 import { applyRoleWithRollback, buildApplyRoleUpdate, roleSkillNames } from '@/lib/applyRole';
 import {
@@ -356,10 +357,13 @@ export function RolesPage() {
 
   useEffect(() => {
     void Promise.resolve(ensureRolesLoaded()).finally(() => setRolesLoaded(true));
-    void ensureMarketplaceSourcesLoaded();
+    if (isFeatureEnabled('externalLinks')) {
+      void ensureMarketplaceSourcesLoaded();
+    }
   }, [ensureMarketplaceSourcesLoaded, ensureRolesLoaded]);
 
   useEffect(() => {
+    if (!isFeatureEnabled('externalLinks')) return;
     if (didAutoOpenMarketplace || !rolesLoaded || roles.length > 0) return;
     didAutoOpenMarketplace = true;
     setActiveTab('marketplace');
@@ -781,7 +785,7 @@ export function RolesPage() {
                 </div>
               ),
             },
-            {
+            ...(isFeatureEnabled('externalLinks') ? [{
               key: 'marketplace',
               label: t('roles.marketplace'),
               children: (
@@ -832,7 +836,7 @@ export function RolesPage() {
                   </div>
                 </div>
               ),
-            },
+            }] : []),
           ]}
         />
         <style>{`

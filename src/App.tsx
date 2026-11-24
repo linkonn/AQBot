@@ -27,6 +27,7 @@ import { useTrayMenuActions } from '@/hooks/useTrayMenuActions';
 import { ProviderDeepLinkDialog } from '@/hooks/useProviderDeepLink';
 import { useShadcnTheme } from '@/theme/shadcnTheme';
 import { isTauri, invoke, listen } from '@/lib/invoke';
+import { isFeatureEnabled } from '@/lib/edition';
 import { applyAppFonts } from '@/lib/applyAppFonts';
 import { cssFontStack, DEFAULT_CODE_FONT_FALLBACK, DEFAULT_UI_FONT_FALLBACK } from '@/lib/cssFontFamily';
 import { preloadChatRenderers } from '@/lib/preloadChatRenderers';
@@ -126,8 +127,10 @@ function AppInner() {
   useEffect(() => setupAgentEventListeners(), []);
 
   // Auto-check for updates on startup and periodically (gated by auto_check_update)
+  // 内网版更新源是 GitHub，不可达，这里直接短路，避免老配置里残留的 true 继续发请求
   const { checkForUpdate } = useUpdateChecker();
-  const autoCheckUpdate = useSettingsStore((s) => s.settings.auto_check_update ?? true);
+  const autoCheckUpdateSetting = useSettingsStore((s) => s.settings.auto_check_update ?? true);
+  const autoCheckUpdate = isFeatureEnabled('updateCheck') && autoCheckUpdateSetting;
   const updateCheckInterval = useSettingsStore((s) => s.settings.update_check_interval ?? 60);
   const updateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 

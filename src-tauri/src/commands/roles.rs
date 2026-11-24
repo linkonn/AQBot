@@ -345,7 +345,7 @@ fn plexpt_entries_from_json(text: &str) -> Result<Vec<RoleMarketplaceEntry>, Str
 async fn fetch_text(url: &str) -> Result<String, String> {
     let response = reqwest::Client::new()
         .get(url)
-        .header("User-Agent", "AQBot")
+        .header("User-Agent", "ForensicHand")
         .send()
         .await
         .map_err(|err| format!("Fetch failed: {err}"))?;

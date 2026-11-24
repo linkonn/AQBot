@@ -14,6 +14,16 @@ const mocks = vi.hoisted(() => ({
   messageWarning: vi.fn(),
 }));
 
+// 发行版开关可在这组测试里切换，用于覆盖公网版与内网版两种渲染结果
+const edition = vi.hoisted(() => ({ onlineModelCatalog: true }));
+
+vi.mock('@/lib/edition', () => ({
+  EDITION: 'public',
+  FEATURES: {},
+  isFeatureEnabled: (key: string) =>
+    key === 'onlineModelCatalog' ? edition.onlineModelCatalog : true,
+}));
+
 let settings: Partial<AppSettings> = {};
 
 vi.mock('react-i18next', () => ({
@@ -182,6 +192,7 @@ describe('GeneralSettings', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    edition.onlineModelCatalog = true;
     platformSpy = vi.spyOn(window.navigator, 'platform', 'get').mockReturnValue('MacIntel');
     mocks.invoke.mockResolvedValue(undefined);
     mocks.saveSettings.mockResolvedValue([]);
@@ -263,6 +274,15 @@ describe('GeneralSettings', () => {
     expect(mocks.saveSettings).toHaveBeenCalledWith({
       model_catalog_source: 'online',
     });
+  });
+
+  it('hides the model catalog control when the online catalog is unavailable', () => {
+    edition.onlineModelCatalog = false;
+
+    render(<GeneralSettings />);
+
+    expect(screen.queryByRole('combobox', { name: 'builtin-online' })).not.toBeInTheDocument();
+    expect(screen.queryByText('模型元数据来源')).not.toBeInTheDocument();
   });
 
   it('disables tray-dependent settings when the tray is hidden', () => {

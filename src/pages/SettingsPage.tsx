@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { theme } from 'antd';
 import { useUIStore } from '@/stores';
+import { isFeatureEnabled } from '@/lib/edition';
 import {
   SettingsSidebar,
   ProviderSettings,
@@ -44,7 +45,10 @@ const SECTION_COMPONENTS: Record<SettingsSection, React.ComponentType> = {
 export function SettingsPage() {
   const { token } = theme.useToken();
   const settingsSection = useUIStore((s) => s.settingsSection);
-  const ContentComponent = SECTION_COMPONENTS[settingsSection];
+  // ACP 设置页在内网版没有入口，这里兜底回落到通用设置，避免残留状态直接渲染
+  const section =
+    settingsSection === 'acpAgents' && !isFeatureEnabled('acpAgents') ? 'general' : settingsSection;
+  const ContentComponent = SECTION_COMPONENTS[section];
   const contentScrollRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {

@@ -27,7 +27,10 @@ async fn load_model_catalog(
     settings: &AppSettings,
     now: i64,
 ) -> crate::model_catalog::CatalogLoadResult {
-    if settings.model_catalog_source == ModelCatalogSourcePreference::Builtin {
+    // 内网版：在线模型目录的数据源是 GitHub 上的 litellm 模型表，不可达，强制用内置快照
+    if !crate::edition::ENABLE_ONLINE_MODEL_CATALOG
+        || settings.model_catalog_source == ModelCatalogSourcePreference::Builtin
+    {
         return state.model_catalog.load_builtin();
     }
     let proxy = ProviderProxyConfig::resolve(&None, settings);

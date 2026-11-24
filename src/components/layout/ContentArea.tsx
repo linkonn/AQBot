@@ -1,6 +1,7 @@
 import { Activity, memo, useLayoutEffect, useState, type ReactNode } from 'react';
 import type { PageKey } from '@/types';
 import { beginPageRender, recordPageCommit } from '@/lib/performanceInstrumentation';
+import { isFeatureEnabled } from '@/lib/edition';
 import { ChatPage } from '@/pages/ChatPage';
 import { DrawingPage } from '@/pages/DrawingPage';
 import { KnowledgePage } from '@/pages/KnowledgePage';
@@ -71,7 +72,8 @@ function renderUnmountedPage(activePage: PageKey): ReactNode {
     case 'roles':
       return <RolesPage />;
     case 'agent':
-      return <AgentPage />;
+      // ACP 工作台：内网版关闭时导航入口已移除，这里兜底不渲染，避免误触发外网请求
+      return isFeatureEnabled('acpAgents') ? <AgentPage /> : null;
     case 'chat':
     case 'drawing':
       return null;

@@ -6,13 +6,17 @@ import { useUIStore, useSettingsStore } from '@/stores';
 import { useUserProfileStore } from '@/stores/userProfileStore';
 import { getShortcutBinding, formatShortcutForDisplay } from '@/lib/shortcuts';
 import type { ShortcutAction } from '@/lib/shortcuts';
+import { isFeatureEnabled } from '@/lib/edition';
 import { useResolvedAvatarSrc } from '@/hooks/useResolvedAvatarSrc';
 import { UserProfileModal } from './UserProfileModal';
 import type { PageKey } from '@/types';
 
 const mainNavItems: { key: PageKey; icon: React.ReactNode; labelKey: string }[] = [
   { key: 'chat', icon: <MessageSquare size={18} />, labelKey: 'nav.chat' },
-  { key: 'agent', icon: <Bot size={18} />, labelKey: 'nav.agent' },
+  // agent 页面是 ACP 外部 agent 工作台，内网版关闭
+  ...(isFeatureEnabled('acpAgents')
+    ? [{ key: 'agent' as PageKey, icon: <Bot size={18} />, labelKey: 'nav.agent' }]
+    : []),
   { key: 'drawing', icon: <ImagePlus size={18} />, labelKey: 'nav.drawing' },
   { key: 'roles', icon: <Users size={18} />, labelKey: 'nav.roles' },
   { key: 'skills', icon: <Sparkles size={18} />, labelKey: 'nav.skills' },

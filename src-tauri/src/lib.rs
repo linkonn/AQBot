@@ -70,6 +70,7 @@ mod crash_diagnostics;
 mod diagnostic_log;
 mod gateway_runtime;
 mod diagnostics;
+mod edition;
 mod embedding_runtime;
 mod indexing;
 pub mod knowledge_index_scheduler;
@@ -659,6 +660,8 @@ pub fn run() {
         commands::skills::open_skills_dir,
         commands::skills::open_skill_dir,
         commands::skills::search_marketplace,
+        commands::skills::get_skill_registry_status,
+        commands::skills::get_registry_skill_detail,
         commands::skills::check_skill_updates,
         // roles
         commands::roles::list_roles,

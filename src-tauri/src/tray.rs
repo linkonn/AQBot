@@ -313,24 +313,30 @@ fn build_menu(
     menu.append(&selection_toolbar)?;
 
     // GitHub — system Share template (matches size/color of other native icons)
-    append_native_icon_item(
-        app,
-        &menu,
-        "open_github",
-        labels.github,
-        true,
-        NativeIcon::Share,
-    )?;
+    // 内网版没有公网，外部链接入口不显示
+    if crate::edition::ENABLE_EXTERNAL_LINKS {
+        append_native_icon_item(
+            app,
+            &menu,
+            "open_github",
+            labels.github,
+            true,
+            NativeIcon::Share,
+        )?;
+    }
 
     // Check for updates — refresh
-    append_native_icon_item(
-        app,
-        &menu,
-        "check_update",
-        labels.check_update,
-        true,
-        NativeIcon::Refresh,
-    )?;
+    // 更新源是 GitHub releases，内网不可达
+    if crate::edition::ENABLE_UPDATE_CHECK {
+        append_native_icon_item(
+            app,
+            &menu,
+            "check_update",
+            labels.check_update,
+            true,
+            NativeIcon::Refresh,
+        )?;
+    }
 
     let sep_quit = PredefinedMenuItem::separator(app)?;
     menu.append(&sep_quit)?;
@@ -529,7 +535,7 @@ fn create_tray_inner(
         .icon_as_template(appearance.is_template)
         .menu(&menu)
         .show_menu_on_left_click(false)
-        .tooltip("AQBot")
+        .tooltip("取证之手")
         .on_menu_event(|app, event| {
             handle_menu_event(app, event.id.as_ref());
         })

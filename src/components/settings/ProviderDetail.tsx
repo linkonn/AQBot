@@ -67,6 +67,7 @@ import {
   sortModelsByVersionDesc,
 } from '@/lib/modelVersionSort';
 import { getBuiltinProviderWebsite, openExternalUrl } from '@/lib/providerWebsites';
+import { isFeatureEnabled } from '@/lib/edition';
 import {
   AWS_REGION_OPTIONS,
   DEFAULT_HOSTS,
@@ -1341,7 +1342,7 @@ export function ProviderDetail({ providerId }: ProviderDetailProps) {
               <Title level={4} className="!mb-0">
                 {provider.name}
               </Title>
-              {providerWebsite && (
+              {providerWebsite && isFeatureEnabled('externalLinks') && (
                 <Button
                   type="link"
                   size="small"

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '@/stores';
 import { isTauri, invoke } from '@/lib/invoke';
 import { LANG_OPTIONS } from '@/lib/constants';
+import { isFeatureEnabled } from '@/lib/edition';
 import type { ModelCatalogSourcePreference, TrayIconStyle } from '@/types';
 import { SettingsGroup } from './SettingsGroup';
 import { SettingsSelect } from './SettingsSelect';
@@ -57,34 +58,36 @@ export function GeneralSettings() {
         </div>
       </SettingsGroup>
 
-      {/* Model catalog */}
-      <SettingsGroup title={t('settings.groupModelCatalog')}>
-        <div style={rowStyle} className="flex items-center justify-between gap-4">
-          <div>
-            <div>{t('settings.modelCatalogSetting')}</div>
-            <div style={{ color: 'var(--ant-color-text-secondary)', fontSize: 12 }}>
-              {t('settings.modelCatalogSettingHint')}
+      {/* Model catalog —— 内网版只能用内置快照，在线同步的 GitHub 源不可达 */}
+      {isFeatureEnabled('onlineModelCatalog') && (
+        <SettingsGroup title={t('settings.groupModelCatalog')}>
+          <div style={rowStyle} className="flex items-center justify-between gap-4">
+            <div>
+              <div>{t('settings.modelCatalogSetting')}</div>
+              <div style={{ color: 'var(--ant-color-text-secondary)', fontSize: 12 }}>
+                {t('settings.modelCatalogSettingHint')}
+              </div>
             </div>
+            <SettingsSelect
+              value={settings.model_catalog_source ?? 'builtin'}
+              onChange={(source) => saveSettings({
+                model_catalog_source: source as ModelCatalogSourcePreference,
+              })}
+              options={[
+                {
+                  label: t('settings.modelCatalogBuiltinOption'),
+                  value: 'builtin',
+                },
+                {
+                  label: t('settings.modelCatalogOnlineOption'),
+                  value: 'online',
+                },
+              ]}
+              style={{ flexShrink: 0 }}
+            />
           </div>
-          <SettingsSelect
-            value={settings.model_catalog_source ?? 'builtin'}
-            onChange={(source) => saveSettings({
-              model_catalog_source: source as ModelCatalogSourcePreference,
-            })}
-            options={[
-              {
-                label: t('settings.modelCatalogBuiltinOption'),
-                value: 'builtin',
-              },
-              {
-                label: t('settings.modelCatalogOnlineOption'),
-                value: 'online',
-              },
-            ]}
-            style={{ flexShrink: 0 }}
-          />
-        </div>
-      </SettingsGroup>
+        </SettingsGroup>
+      )}
 
       {/* Startup */}
       <SettingsGroup title={t('settings.groupStartup')}>

@@ -2,6 +2,7 @@ import { Menu, theme } from 'antd';
 import { Cloud, Settings, Palette, Globe, Zap, Database, Info, Search, Plug, CloudUpload, Bot, HardDrive, MessageSquare, ArrowLeft, TextCursorInput, Terminal, Cpu } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore, useUIStore } from '@/stores';
+import { isFeatureEnabled } from '@/lib/edition';
 import type { SettingsSection, SettingsSidebarDensity } from '@/types';
 
 const MENU_ICONS: Record<SettingsSection, React.ReactNode> = {
@@ -32,7 +33,8 @@ const SECTION_KEYS: SettingsSection[] = [
   'localModels',
   'searchProviders',
   'mcpServers',
-  'acpAgents',
+  // ACP 外部 agent 需要公网拉注册表与安装外部 CLI，内网版不提供
+  ...(isFeatureEnabled('acpAgents') ? (['acpAgents'] as SettingsSection[]) : []),
   'proxy',
   'shortcuts',
   'selectionToolbar',

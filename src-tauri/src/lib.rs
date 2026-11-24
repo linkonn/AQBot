@@ -85,6 +85,7 @@ pub mod multi_model_run;
 mod onnxruntime_dylib;
 mod paths;
 mod selection_toolbar;
+mod shell_probe;
 mod startup_diagnostics;
 #[cfg(any(target_os = "windows", test))]
 mod startup_messages;
@@ -719,6 +720,9 @@ pub fn run() {
                 app.config().identifier.clone(),
                 diagnostic_log::path(),
             ));
+            // Agent 的 Bash 工具每次执行都现选 shell，选错时所有命令都会失败，
+            // 而错误只出现在工具结果里。开机跑一次 echo，把选中的 shell 写进日志。
+            shell_probe::log_agent_shell_probe();
             startup_phase.set("setup.pending_restore");
             match aqbot_core::pending_restore::apply_pending_restore(&app_dir) {
                 Ok(aqbot_core::pending_restore::PendingRestoreOutcome::Applied) => {

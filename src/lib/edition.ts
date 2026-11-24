@@ -31,6 +31,14 @@ export const FEATURES = {
    * 关闭后只能用内置快照。
    */
   onlineModelCatalog: !INTRANET,
+
+  /**
+   * 上一次会话异常退出时的恢复对话框。
+   * 开发期会频繁强杀进程，每次启动都弹一次太吵，先关掉。
+   * 关掉只是不打扰：诊断标记、日志、pending 报告仍然照常写入，
+   * 需要排查时把这里改回 true 就能重新看到。
+   */
+  crashRecovery: false,
 } as const;
 
 export type FeatureKey = keyof typeof FEATURES;

@@ -163,7 +163,7 @@ function AppInner() {
         <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
       )}
       <GlobalCopyMenu />
-      {!isConversationPopout && <CrashRecoveryModal />}
+      {!isConversationPopout && isFeatureEnabled('crashRecovery') && <CrashRecoveryModal />}
       {isConversationPopout ? (
         <ChatChromeContext.Provider value={{ kind: 'popout' }}>
           <div className="flex-1 overflow-hidden min-h-0">

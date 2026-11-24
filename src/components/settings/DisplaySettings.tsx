@@ -20,6 +20,7 @@ import { SHIKI_LIGHT_THEMES, SHIKI_DARK_THEMES, formatThemeName } from '@/consta
 import {
   TITLEBAR_ICON_IDS,
   TITLEBAR_ICON_LABEL_KEYS,
+  availableTitlebarIcons,
   isTitlebarIconVisible,
 } from '@/lib/titlebarIcons';
 import { normalizeFontStyle } from '@/lib/systemFonts';
@@ -89,7 +90,7 @@ export function DisplaySettings() {
           <span>{t('settings.primaryColor')}</span>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             {[
-              '#17A93D', '#1677ff', '#1890ff', '#13c2c2', '#2f54eb',
+              '#1A6BFF', '#1677ff', '#1890ff', '#13c2c2', '#2f54eb',
               '#722ed1', '#eb2f96', '#fa541c', '#faad14', '#fadb14',
               '#a0d911', '#000000',
             ].map((color) => (
@@ -157,7 +158,9 @@ export function DisplaySettings() {
             backgroundColor: token.colorFillQuaternary,
           }}
         >
-          {TITLEBAR_ICON_IDS.map((id) => {
+          {TITLEBAR_ICON_IDS.filter(
+            (id) => id === 'settings' || availableTitlebarIcons().includes(id as TitlebarToggleableIconId),
+          ).map((id) => {
             const locked = id === 'settings';
             const visible = locked || isTitlebarIconVisible(settings, id);
             const label = t(TITLEBAR_ICON_LABEL_KEYS[id]);

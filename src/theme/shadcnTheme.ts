@@ -29,6 +29,14 @@ export function useShadcnTheme(
           colorLink: primaryColor,
           fontSize,
           fontWeightStrong: 500,
+
+          // 科技蓝底：暗色用深海军蓝，浅色用带一点蓝的冷白，
+          // 让所有容器/弹层自动继承同一冷色基调，而不是纯黑纯白。
+          colorBgBase: isDark ? '#0A1220' : '#F5F8FE',
+          colorBgLayout: isDark ? '#070E18' : '#EEF4FD',
+          colorBorder: isDark ? '#1D2B40' : '#DCE6F5',
+          colorBorderSecondary: isDark ? '#16233A' : '#E8EFFA',
+
           ...(fontFamily ? { fontFamily } : {}),
           ...(codeFontFamily ? { fontFamilyCode: codeFontFamily } : {}),
 

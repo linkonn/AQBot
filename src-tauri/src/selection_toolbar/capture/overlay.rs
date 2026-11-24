@@ -99,7 +99,7 @@ pub(super) async fn choose(
 fn open_window(app: &AppHandle, target: &CaptureTarget, id: String) -> Result<(), CaptureError> {
     let window =
         WebviewWindowBuilder::new(app, OVERLAY_LABEL, WebviewUrl::App("index.html".into()))
-            .title("AQBot")
+            .title("取证之手")
             .visible(false)
             .focused(true)
             .decorations(false)

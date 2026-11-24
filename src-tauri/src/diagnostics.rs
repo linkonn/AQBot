@@ -81,11 +81,11 @@ pub fn install_panic_hook() {
 pub fn show_linux_startup_error_dialog(message: &str) {
     if spawn_linux_dialog(
         "zenity",
-        &["--error", "--title", "AQBot", "--text", message],
+        &["--error", "--title", "取证之手", "--text", message],
     ) {
         return;
     }
-    if spawn_linux_dialog("kdialog", &["--title", "AQBot", "--error", message]) {
+    if spawn_linux_dialog("kdialog", &["--title", "取证之手", "--error", message]) {
         return;
     }
 

@@ -25,7 +25,7 @@ let settingsRequest: { revision: number; promise: Promise<void> } | null = null;
 const DEFAULT_SETTINGS: AppSettings = {
   language: 'zh-CN',
   theme_mode: 'system',
-  primary_color: '#17A93D',
+  primary_color: '#1A6BFF',
   border_radius: 8,
   auto_start: false,
   show_on_start: true,
@@ -127,7 +127,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   notify_errors: true,
   last_selected_conversation_id: null,
   documents_root_override: null,
-  auto_check_update: true,
+  // 内网版本不连外网更新源，默认关闭自动检查，避免每次启动产生失败日志。
+  auto_check_update: false,
   update_check_interval: 60,
   default_system_prompt: null,
   chat_minimap_enabled: false,

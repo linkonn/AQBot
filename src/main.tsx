@@ -17,7 +17,7 @@ let reactRoot: ReactDOM.Root | undefined;
 let failureQueued = false;
 
 function handleStartupFailure(error: unknown): void {
-  void writeStartupDiagnostic('error', `AQBot frontend bootstrap failed: ${formatStartupError(error)}`);
+  void writeStartupDiagnostic('error', `取证之手 frontend bootstrap failed: ${formatStartupError(error)}`);
   if (failureQueued) return;
   failureQueued = true;
   // React can report an uncaught render error during its own commit; unmount afterward.
@@ -33,7 +33,7 @@ async function bootstrap() {
   void writeStartupDiagnostic('info', 'frontend bootstrap begin');
   const rootElement = document.getElementById('root');
   if (!rootElement) {
-    throw new Error('AQBot root element #root was not found');
+    throw new Error('取证之手 root element #root was not found');
   }
 
   const windowLabel = '__TAURI_INTERNALS__' in window
@@ -44,13 +44,13 @@ async function bootstrap() {
   if (frontendKindForWindow(windowLabel) === 'capture-overlay') {
     const { CaptureOverlay } = await import('./capture-overlay/CaptureOverlay');
     reactRoot.render(<CaptureOverlay />);
-    void writeStartupDiagnostic('info', 'AQBot capture overlay frontend render scheduled');
+    void writeStartupDiagnostic('info', '取证之手 capture overlay frontend render scheduled');
     return;
   }
   if (frontendKindForWindow(windowLabel) === 'selection-toolbar') {
     const { SelectionToolbarRoot } = await import('./selection-toolbar/SelectionToolbarApp');
     reactRoot.render(<SelectionToolbarRoot />);
-    void writeStartupDiagnostic('info', 'AQBot selection toolbar frontend render scheduled');
+    void writeStartupDiagnostic('info', '取证之手 selection toolbar frontend render scheduled');
     return;
   }
 

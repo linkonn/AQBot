@@ -93,7 +93,7 @@ pub fn open_or_focus(app: &AppHandle, conversation_id: &str) -> Result<bool, Str
 
     let (width, height) = popout_size_from_main(app);
     let mut builder = WebviewWindowBuilder::new(app, &label, WebviewUrl::App("index.html".into()))
-        .title("AQBot")
+        .title("取证之手")
         .inner_size(width, height)
         .min_inner_size(720.0, 480.0)
         .visible(false)

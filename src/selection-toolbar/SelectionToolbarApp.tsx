@@ -720,7 +720,7 @@ export function SelectionToolbarRoot() {
       direction={i18n.dir(language)}
       theme={{
         algorithm: theme === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
-        token: { borderRadius: 8, colorPrimary: '#17A93D' },
+        token: { borderRadius: 8, colorPrimary: '#1A6BFF' },
       }}
     >
       <SelectionToolbarApp />

@@ -603,7 +603,7 @@ function initProviders(): any[] {
 
 const DEFAULT_SETTINGS = {
   theme_mode: 'system',
-  primary_color: '#17A93D',
+  primary_color: '#1A6BFF',
   font_size: 14,
   settings_sidebar_density: 'standard',
   language: 'zh-CN',

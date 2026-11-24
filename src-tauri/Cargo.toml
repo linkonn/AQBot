@@ -23,14 +23,14 @@ description = "AQBot - AI Chat Desktop App"
 authors = ["you"]
 license = "AGPL-3.0-only"
 edition = "2021"
-default-run = "AQBot"
+default-run = "ForensicHand"
 
 [lib]
 name = "aqbot_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [[bin]]
-name = "AQBot"
+name = "ForensicHand"
 path = "src/main.rs"
 
 [build-dependencies]

@@ -10,6 +10,7 @@ import { getShortcutBinding, formatShortcutForDisplay } from '@/lib/shortcuts';
 import { isTitlebarIconVisible } from '@/lib/titlebarIcons';
 import { useUpdateChecker } from '@/hooks/useUpdateChecker';
 import appLogo from '@/assets/image/logo.png';
+import { APP_NAME } from '@/lib/brand';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { titleBarPaddingLeft } from '@/lib/titleBarLayout';
 
@@ -467,8 +468,8 @@ export function TitleBar({ variant = 'main' }: { variant?: 'main' | 'popout' }) 
       {/* Left: App icon + name (Windows only) */}
       {IS_WINDOWS ? (
         <div className="title-bar-nodrag" style={{ display: 'flex', alignItems: 'center', gap: 6, marginRight: 8 }}>
-          <img src={appLogo} alt="AQBot" style={{ width: 18, height: 18 }} draggable={false} />
-          <span style={{ fontSize: 13, fontWeight: 600, color: token.colorTextBase, userSelect: 'none' }}>AQBot</span>
+          <img src={appLogo} alt={APP_NAME} style={{ width: 18, height: 18 }} draggable={false} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: token.colorTextBase, userSelect: 'none' }}>{APP_NAME}</span>
         </div>
       ) : <div style={{ flexShrink: 0 }} />}
 

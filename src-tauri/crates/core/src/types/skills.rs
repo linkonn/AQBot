@@ -103,4 +103,27 @@ pub struct MarketplaceSkill {
     pub stars: i64,
     pub installs: i64,
     pub installed: bool,
+    /// 内网仓库返回的元数据；旧数据源不带这些字段时保持为空。
+    #[serde(default)]
+    pub version: String,
+    #[serde(default)]
+    pub category: String,
+    #[serde(default)]
+    pub author: String,
+    #[serde(default)]
+    pub updated_at: String,
+}
+
+/// 内网技能仓库的运行时信息，用于界面上显示当前仓库地址与连通状态。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SkillRegistryInfo {
+    pub base_url: String,
+    pub source: String,
+    pub reachable: bool,
+    pub name: String,
+    pub version: String,
+    pub skill_count: i64,
+    #[serde(default)]
+    pub error: String,
 }

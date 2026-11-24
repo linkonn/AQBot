@@ -1,0 +1,7 @@
+{
+  "name": "PCAP 流量分析",
+  "version": "1.2.0",
+  "category": "网络取证",
+  "author": "取证之手内网仓库",
+  "tags": ["pcap", "tshark", "c2", "webshell"]
+}

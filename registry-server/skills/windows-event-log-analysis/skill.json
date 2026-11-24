@@ -1,0 +1,7 @@
+{
+  "name": "Windows 日志分析",
+  "version": "1.0.3",
+  "category": "主机取证",
+  "author": "取证之手内网仓库",
+  "tags": ["evtx", "windows", "timeline", "lateral-movement"]
+}

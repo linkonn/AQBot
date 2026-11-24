@@ -29,6 +29,7 @@ pub(crate) struct SkillPackageRef {
 }
 
 impl SkillPackageRef {
+    #[cfg_attr(not(test), allow(dead_code))]
     pub fn repo_slug(&self) -> String {
         format!("{}/{}", self.owner, self.repo)
     }
@@ -445,62 +446,46 @@ pub async fn install_skill(source: String, target: Option<String>) -> Result<Str
     let target_dir = install_target_dir(target.as_deref());
     std::fs::create_dir_all(&target_dir).map_err(|e| e.to_string())?;
 
-    if is_local_source(&source) {
-        install_from_local(&source, &target_dir)
-    } else {
-        let package = parse_skill_package_ref(&source)?;
-        install_from_github(&package, &target_dir).await
+    let raw = source.trim();
+    if is_local_source(raw) {
+        return install_from_local(raw, &target_dir);
     }
+    if let Some(id) = raw.strip_prefix("registry:") {
+        return install_from_registry(id, &target_dir).await;
+    }
+    // 内网版本不再支持 GitHub / skills.sh：非本地来源一律按内网仓库技能 id 处理。
+    if !raw.is_empty() && !raw.contains('/') && !raw.contains('\\') && !raw.contains("://") {
+        return install_from_registry(raw, &target_dir).await;
+    }
+    Err(format!(
+        "内网版本只能从内网技能仓库或本地目录安装，无法从外部地址安装：{source}"
+    ))
 }
 
-async fn install_from_github(
-    package: &SkillPackageRef,
-    target_dir: &Path,
-) -> Result<String, String> {
-    let url = format!(
-        "https://api.github.com/repos/{}/{}/zipball",
-        package.owner, package.repo
-    );
-
-    let client = reqwest::Client::new();
-    let response = client
-        .get(&url)
-        .header("User-Agent", "AQBot")
-        .header("Accept", "application/vnd.github+json")
-        .send()
-        .await
-        .map_err(|e| format!("Failed to download skill: {e}"))?;
-
-    if !response.status().is_success() {
-        return Err(format!(
-            "GitHub API returned status {}: {}",
-            response.status(),
-            response.text().await.unwrap_or_default()
-        ));
-    }
-
-    let bytes = response.bytes().await.map_err(|e| e.to_string())?;
+/// 从内网技能仓库下载 zip 包并安装。
+async fn install_from_registry(id: &str, target_dir: &Path) -> Result<String, String> {
+    let (bytes, version) = super::registry::download(id).await?;
     let temp_dir = tempfile::tempdir().map_err(|e| e.to_string())?;
     let cursor = std::io::Cursor::new(&bytes);
     let mut archive =
-        zip::ZipArchive::new(cursor).map_err(|e| format!("Failed to read zip: {e}"))?;
+        zip::ZipArchive::new(cursor).map_err(|e| format!("技能包不是有效的 zip：{e}"))?;
     let top_dir = zipball_root_name(&archive)?;
     archive
         .extract(temp_dir.path())
-        .map_err(|e| format!("Failed to extract: {e}"))?;
+        .map_err(|e| format!("解压技能包失败：{e}"))?;
 
     let extracted = temp_dir.path().join(&top_dir);
-    let commit = top_dir.split('-').next_back().unwrap_or("unknown");
     install_extracted_skills(
         &extracted,
         target_dir,
-        package.skill.as_deref(),
-        "github",
-        &package.repo_slug(),
-        commit,
-        "marketplace",
+        None,
+        "registry",
+        &format!("registry:{id}"),
+        &version,
+        "registry",
     )
 }
+
 
 fn install_from_local(source: &str, target_dir: &Path) -> Result<String, String> {
     let source_path = PathBuf::from(source);

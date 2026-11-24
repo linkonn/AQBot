@@ -1,23 +1,24 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   Button, Switch, Tag, Input, Modal, Tabs, Space, Spin, Empty,
-  Typography, message, Card, Popconfirm, theme, Dropdown, Collapse, Select,
+  Typography, message, Card, Popconfirm, theme, Dropdown, Collapse, Tooltip,
 } from 'antd';
 import {
-  FolderOpen, RefreshCw, Download, Trash2, Sparkles, Store, Star, Github,
+  FolderOpen, RefreshCw, Download, Trash2, Sparkles, Store, Server, WifiOff,
   ChevronRight, Layers, Bot,
 } from 'lucide-react';
 import { Claude, Codex } from '@lobehub/icons';
 import appLogo from '@/assets/image/logo.png';
 import { useTranslation } from 'react-i18next';
 import { useSkillStore } from '@/stores';
+import { invoke } from '@/lib/invoke';
 import type { Skill, MarketplaceSkill } from '@/types';
 import { CopyButton } from '@/components/common/CopyButton';
 import { skillInspectTagFor } from '@/components/skills/SkillStatusTag';
 
 
 const INSTALL_TARGETS = [
-  { key: 'aqbot', label: '~/.aqbot/skills/', desc: 'AQBot' },
+  { key: 'aqbot', label: '~/.aqbot/skills/', desc: '取证之手' },
   { key: 'codex', label: '~/.codex/skills/', desc: 'Codex' },
   { key: 'claude', label: '~/.claude/skills/', desc: 'Claude' },
   { key: 'agents', label: '~/.agents/skills/', desc: 'Agents' },
@@ -85,12 +86,6 @@ function InstallTargetLabel({ target }: { target: typeof INSTALL_TARGETS[number]
   );
 }
 
-const openExternalUrl = (url: string) => {
-  import('@tauri-apps/plugin-opener')
-    .then(({ openUrl }) => openUrl(url))
-    .catch(() => window.open(url, '_blank'));
-};
-
 const { Text, Paragraph } = Typography;
 
 
@@ -110,34 +105,10 @@ function marketplaceInstallRef(skill: MarketplaceSkill): string {
   return skill.repo;
 }
 
-function skillGithubUrl(skill: MarketplaceSkill): string {
-  return skill.repo.includes('/') ? `https://github.com/${skill.repo}` : `https://skills.sh/${skill.repo}`;
-}
-
 async function fetchMarketplaceSkillMarkdown(skill: MarketplaceSkill): Promise<string> {
-  const skillId = skill.skillId || skill.name;
-  const branches = ['main', 'master'];
-  const paths = [
-    'SKILL.md',
-    skillId ? `skills/${skillId}/SKILL.md` : '',
-    skillId ? `.claude/skills/${skillId}/SKILL.md` : '',
-    skillId ? `.agents/skills/${skillId}/SKILL.md` : '',
-    skillId ? `.codex/skills/${skillId}/SKILL.md` : '',
-  ].filter(Boolean);
-  if (!skill.repo.includes('/')) {
-    return '';
-  }
-  for (const branch of branches) {
-    for (const path of paths) {
-      try {
-        const res = await fetch(`https://raw.githubusercontent.com/${skill.repo}/${branch}/${path}`);
-        if (res.ok) return await res.text();
-      } catch {
-        // try the next candidate
-      }
-    }
-  }
-  return '';
+  const id = skill.skillId || skill.name;
+  if (!id) return '';
+  return invoke<string>('get_registry_skill_detail', { id });
 }
 
 function SkillCard({
@@ -233,18 +204,17 @@ function MarketplaceCard({
   onDetail,
   installing,
   t,
-  source,
 }: {
   skill: MarketplaceSkill;
   onInstall: (source: string, target: string) => void;
   onDetail: (installRef: string) => void;
   installing: string | null;
   t: (key: string) => string;
-  source: string;
 }) {
   const installRef = marketplaceInstallRef(skill);
-  const githubUrl = skillGithubUrl(skill);
-  const sourceLabel = skill.skillId ? `${skill.repo}@${skill.skillId}` : skill.repo;
+  const meta = [skill.category, skill.version ? `v${skill.version}` : '']
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <Card
@@ -255,20 +225,17 @@ function MarketplaceCard({
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
             <Text strong className="skill-card-title" style={{ cursor: 'pointer' }} onClick={() => onDetail(installRef)}>
               {skill.name}
             </Text>
             <CopyButton text={skill.name} size={12} />
-            {source === 'github' ? (
-              <Text type="secondary" style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                <Star size={12} style={{ color: '#faad14' }} /> {skill.stars.toLocaleString()}
-              </Text>
-            ) : (
-              <Text type="secondary" style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                <Download size={12} /> {skill.installs.toLocaleString()}
-              </Text>
-            )}
+            {skill.category ? (
+              <Tag color="blue" style={{ marginInlineEnd: 0, fontSize: 11 }}>{skill.category}</Tag>
+            ) : null}
+            <Text type="secondary" style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+              <Download size={12} /> {skill.installs.toLocaleString()}
+            </Text>
           </div>
           {skill.description ? (
             <Text
@@ -279,17 +246,12 @@ function MarketplaceCard({
               {skill.description}
             </Text>
           ) : null}
-          <Text type="secondary" style={{ fontSize: 12 }}>{sourceLabel}</Text>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {skill.skillId}
+            {meta ? ` · ${meta}` : ''}
+          </Text>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Button
-            size="small"
-            type="text"
-            icon={<Github size={14} />}
-            onClick={() => openExternalUrl(githubUrl)}
-          >
-            GitHub
-          </Button>
           {skill.installed ? (
             <Button size="small" disabled>
               {t('skills.installed')}
@@ -327,17 +289,17 @@ export function SkillsPage() {
   const { token } = theme.useToken();
   const [messageApi, contextHolder] = message.useMessage();
   const {
-    skills, marketplaceSkills, loading, marketplaceLoading, selectedSkill,
+    skills, marketplaceSkills, loading, marketplaceLoading, marketplaceError,
+    registryInfo, selectedSkill,
     inspectReport, inspectLoading,
     ensureSkillsLoaded, loadSkills, getSkill, toggleSkill, installSkill, uninstallSkill,
     uninstallSkillGroup,
-    openSkillDir, searchMarketplace, inspectSkills, clearSelectedSkill,
+    openSkillDir, searchMarketplace, loadRegistryStatus, inspectSkills, clearSelectedSkill,
   } = useSkillStore();
 
   const [installUrl, setInstallUrl] = useState('');
   const [installing, setInstalling] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-  const [marketplaceSource, setMarketplaceSource] = useState<'skills.sh' | 'github'>('skills.sh');
   const [marketplaceQuery, setMarketplaceQuery] = useState('');
   const marketplaceLoaded = useRef(false);
   const [marketplaceDetailOpen, setMarketplaceDetailOpen] = useState(false);
@@ -347,24 +309,19 @@ export function SkillsPage() {
 
   useEffect(() => {
     void ensureSkillsLoaded();
+    void loadRegistryStatus();
     void inspectSkills().catch((error) => {
       console.error('Failed to inspect skills:', error);
     });
-  }, [ensureSkillsLoaded, inspectSkills]);
-
-  // Re-search when source changes (if marketplace was already searched)
-  useEffect(() => {
-    if (marketplaceLoaded.current) {
-      searchMarketplace(marketplaceQuery, marketplaceSource);
-    }
-  }, [marketplaceSource]);
+  }, [ensureSkillsLoaded, inspectSkills, loadRegistryStatus]);
 
   const handleTabChange = useCallback((key: string) => {
     if (key === 'marketplace' && !marketplaceLoaded.current) {
       marketplaceLoaded.current = true;
-      searchMarketplace('', marketplaceSource);
+      void loadRegistryStatus();
+      searchMarketplace('');
     }
-  }, [searchMarketplace, marketplaceSource]);
+  }, [searchMarketplace, loadRegistryStatus]);
 
   const handleInstallFromUrl = useCallback(async (target: string) => {
     if (!installUrl.trim()) return;
@@ -404,7 +361,7 @@ export function SkillsPage() {
   const handleMarketplaceDetail = useCallback(async (installRef: string) => {
     const skill = marketplaceSkills.find((item) => marketplaceInstallRef(item) === installRef);
     if (!skill) return;
-    const sourceLabel = skill.skillId ? `${skill.repo}@${skill.skillId}` : skill.repo;
+    const sourceLabel = skill.skillId || skill.repo;
     setMarketplaceDetailOpen(true);
     setMarketplaceDetailLoading(true);
     setMarketplaceDetailContent({ name: skill.name, repo: sourceLabel, content: '' });
@@ -703,27 +660,64 @@ export function SkillsPage() {
   const marketplaceContent = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ padding: '0 4px', flexShrink: 0 }}>
-        <Space.Compact style={{ width: '100%', marginBottom: 12 }}>
-          <Select
-            value={marketplaceSource}
-            onChange={(v) => setMarketplaceSource(v)}
-            style={{ width: 120, flexShrink: 0 }}
-            options={[
-              { value: 'skills.sh', label: 'skills.sh' },
-              { value: 'github', label: 'GitHub' },
-            ]}
-          />
-          <Input.Search
-            placeholder={t('skills.searchMarketplace')}
-            loading={marketplaceLoading}
-            onSearch={(q) => {
-              setMarketplaceQuery(q);
-              marketplaceLoaded.current = true;
-              searchMarketplace(q, marketplaceSource);
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            marginBottom: 10,
+            padding: '6px 10px',
+            borderRadius: token.borderRadius,
+            border: `1px solid ${registryInfo?.reachable ? token.colorPrimaryBorder : token.colorErrorBorder}`,
+            backgroundColor: registryInfo?.reachable ? token.colorPrimaryBg : token.colorErrorBg,
+            fontSize: 12,
+          }}
+        >
+          {registryInfo?.reachable ? (
+            <Server size={14} style={{ color: token.colorPrimary }} />
+          ) : (
+            <WifiOff size={14} style={{ color: token.colorError }} />
+          )}
+          <Text strong style={{ fontSize: 12 }}>
+            {t('skills.registryLabel')}
+          </Text>
+          <Text type="secondary" style={{ fontSize: 12, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {registryInfo?.baseUrl || t('skills.registryUnknown')}
+          </Text>
+          {registryInfo?.reachable ? (
+            <Tag color="blue" style={{ marginInlineEnd: 0 }}>
+              {t('skills.registryOnline', { count: registryInfo.skillCount })}
+            </Tag>
+          ) : (
+            <Tooltip title={registryInfo?.error || t('skills.registryOfflineHint')}>
+              <Tag color="error" style={{ marginInlineEnd: 0 }}>
+                {t('skills.registryOffline')}
+              </Tag>
+            </Tooltip>
+          )}
+          <div style={{ flex: 1 }} />
+          <Button
+            size="small"
+            type="text"
+            icon={<RefreshCw size={13} />}
+            onClick={() => {
+              void loadRegistryStatus();
+              searchMarketplace(marketplaceQuery);
             }}
-            enterButton
-          />
-        </Space.Compact>
+          >
+            {t('skills.registryRefresh')}
+          </Button>
+        </div>
+        <Input.Search
+          placeholder={t('skills.searchMarketplace')}
+          loading={marketplaceLoading}
+          onSearch={(q) => {
+            setMarketplaceQuery(q);
+            marketplaceLoaded.current = true;
+            searchMarketplace(q);
+          }}
+          enterButton
+        />
       </div>
       <div style={{ flex: 1, overflow: 'auto', padding: '0 4px' }}>
         {marketplaceLoading ? (
@@ -733,7 +727,11 @@ export function SkillsPage() {
         ) : marketplaceSkills.length === 0 ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={t('skills.noResults')}
+            description={
+              marketplaceError
+                ? t('skills.registryQueryFailed', { error: marketplaceError })
+                : t('skills.noResults')
+            }
           />
         ) : (
           marketplaceSkills.map((skill) => (
@@ -744,7 +742,6 @@ export function SkillsPage() {
               onDetail={handleMarketplaceDetail}
               installing={installing}
               t={t}
-              source={marketplaceSource}
             />
           ))
         )}

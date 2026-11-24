@@ -59,3 +59,9 @@ research-*.tsv
 .autoresearch/
 
 debug/*
+
+# 内网技能仓库下载统计
+registry-server/.stats.json
+
+# WorkBuddy 本地记忆目录
+.workbuddy/

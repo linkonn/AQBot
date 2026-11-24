@@ -2,7 +2,14 @@ import { create } from 'zustand';
 import { invoke } from '@/lib/invoke';
 import { isResourceFresh } from '@/lib/resourceState';
 import type { EnsureLoadedOptions, ResourceInvalidationReason, ResourceMeta } from '@/lib/resourceState';
-import type { Skill, SkillDetail, MarketplaceSkill, SkillUpdateInfo, SkillInspectReport } from '@/types';
+import type {
+  Skill,
+  SkillDetail,
+  MarketplaceSkill,
+  SkillUpdateInfo,
+  SkillInspectReport,
+  SkillRegistryInfo,
+} from '@/types';
 
 const SKILLS_RESOURCE_KEY = 'skills';
 let skillsRequest: { revision: number; promise: Promise<void> } | null = null;
@@ -28,6 +35,8 @@ interface SkillState {
   marketplaceSkills: MarketplaceSkill[];
   loading: boolean;
   marketplaceLoading: boolean;
+  marketplaceError: string | null;
+  registryInfo: SkillRegistryInfo | null;
   selectedSkill: SkillDetail | null;
   inspectReport: SkillInspectReport | null;
   inspectLoading: boolean;
@@ -44,6 +53,7 @@ interface SkillState {
   openSkillsDir: () => Promise<void>;
   openSkillDir: (path: string) => Promise<void>;
   searchMarketplace: (query: string, source?: string) => Promise<void>;
+  loadRegistryStatus: () => Promise<void>;
   checkUpdates: () => Promise<SkillUpdateInfo[]>;
   inspectSkills: () => Promise<SkillInspectReport>;
   clearSelectedSkill: () => void;
@@ -54,6 +64,8 @@ export const useSkillStore = create<SkillState>((set, get) => ({
   marketplaceSkills: [],
   loading: false,
   marketplaceLoading: false,
+  marketplaceError: null,
+  registryInfo: null,
   selectedSkill: null,
   inspectReport: null,
   inspectLoading: false,
@@ -199,13 +211,33 @@ export const useSkillStore = create<SkillState>((set, get) => ({
   },
 
   searchMarketplace: async (query: string, source?: string) => {
-    set({ marketplaceLoading: true, marketplaceSkills: [] });
+    set({ marketplaceLoading: true, marketplaceSkills: [], marketplaceError: null });
     try {
       const results = await invoke<MarketplaceSkill[]>('search_marketplace', { query, source: source ?? null });
       set({ marketplaceSkills: results, marketplaceLoading: false });
     } catch (e) {
       console.error('Failed to search marketplace:', e);
-      set({ marketplaceLoading: false });
+      set({ marketplaceLoading: false, marketplaceSkills: [], marketplaceError: String(e) });
+    }
+  },
+
+  loadRegistryStatus: async () => {
+    try {
+      const info = await invoke<SkillRegistryInfo>('get_skill_registry_status');
+      set({ registryInfo: info });
+    } catch (e) {
+      console.error('Failed to load skill registry status:', e);
+      set({
+        registryInfo: {
+          baseUrl: '',
+          source: 'unknown',
+          reachable: false,
+          name: '',
+          version: '',
+          skillCount: 0,
+          error: String(e),
+        },
+      });
     }
   },
 

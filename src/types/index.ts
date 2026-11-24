@@ -1287,6 +1287,20 @@ export interface MarketplaceSkill {
   stars: number;
   installs: number;
   installed: boolean;
+  version?: string;
+  category?: string;
+  author?: string;
+  updatedAt?: string;
+}
+
+export interface SkillRegistryInfo {
+  baseUrl: string;
+  source: 'env' | 'file' | 'default' | string;
+  reachable: boolean;
+  name: string;
+  version: string;
+  skillCount: number;
+  error?: string;
 }
 
 export interface SkillUpdateInfo {

@@ -1,5 +1,5 @@
 {
-  "name": "aqbot",
+  "name": "forensic-hand",
   "private": true,
   "version": "0.0.165",
   "license": "AGPL-3.0-only",
@@ -9,6 +9,7 @@
     "predev": "node scripts/build-local-deps.mjs",
     "dev": "node scripts/tauri-cli.mjs dev",
     "dev:web": "vite",
+    "registry:start": "node registry-server/server.mjs",
     "prebuild": "node scripts/build-local-deps.mjs",
     "build": "tsc && vite build",
     "preview": "vite preview",

@@ -1,8 +1,13 @@
 mod install;
 mod marketplace;
+mod registry;
 
 pub use install::{__cmd__install_skill, install_skill};
 pub use marketplace::{__cmd__search_marketplace, search_marketplace};
+pub use registry::{
+    __cmd__get_registry_skill_detail, __cmd__get_skill_registry_status, get_registry_skill_detail,
+    get_skill_registry_status,
+};
 
 use crate::paths::aqbot_home;
 use crate::AppState;
@@ -400,6 +405,12 @@ fn read_source_ref(manifest: &Path) -> Option<String> {
 
 #[tauri::command]
 pub async fn check_skill_updates() -> Result<Vec<SkillUpdateInfo>, String> {
+    // 只有 github 来源的老技能才需要比对远端 commit。内网版访问不到 api.github.com，
+    // 直接返回空，免得每个旧技能都白等到请求超时。
+    if crate::edition::INTRANET_EDITION {
+        return Ok(Vec::new());
+    }
+
     let mut updates = Vec::new();
 
     for skills_path in skill_roots() {
@@ -443,7 +454,7 @@ pub async fn check_skill_updates() -> Result<Vec<SkillUpdateInfo>, String> {
             let client = reqwest::Client::new();
             let response = client
                 .get(&url)
-                .header("User-Agent", "AQBot")
+                .header("User-Agent", "ForensicHand")
                 .header("Accept", "application/vnd.github.v3+json")
                 .send()
                 .await;
